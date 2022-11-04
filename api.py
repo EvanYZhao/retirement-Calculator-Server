@@ -1,4 +1,6 @@
 from flask import Flask
+# Test import for numpy (which will probably be used)
+import numpy as np
 
 app = Flask(__name__)
 
