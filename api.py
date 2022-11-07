@@ -14,18 +14,13 @@ def myProfile():
         "years": 25,
         "stock_percentage": 50
     }
-    # name, retirement_account_balance, yearly_expenses, years, stock_percentage
     return response_body
 
 @app.route("/retrieve", methods=['POST'])
 def retrieveData():
     request_data = request.get_json()
-        
-    firstName = request_data["firstName"]
-    lastName = request_data["lastName"]
-    app.logger.info(firstName)
-    app.logger.info(lastName)
-    return lastName
+    app.logger.info(request_data)
+    return request_data   
 
 if __name__ == "__main__":
     app.run()
