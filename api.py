@@ -19,7 +19,13 @@ def myProfile():
 
 @app.route("/retrieve", methods=['POST'])
 def retrieveData():
-    return null
+    request_data = request.get_json()
+        
+    firstName = request_data["firstName"]
+    lastName = request_data["lastName"]
+    app.logger.info(firstName)
+    app.logger.info(lastName)
+    return lastName
 
 if __name__ == "__main__":
     app.run()
