@@ -1,9 +1,10 @@
-from flask import Flask, request, session
+from flask import Flask, request, redirect, session, url_for
 import numpy as np
 import random
 import statistics
 
 app = Flask(__name__)
+app.secret_key = "super_secret_key"
 
 # Loading in stock, bond, and inflation rates in US from years 1980-2021
 historical_stock_returns = np.loadtxt("./data/SnP500_stockReturns.txt", delimiter=',')
@@ -24,11 +25,12 @@ def Inflation():
 
 # Returns rate of change for all 3 fluctuating factors in a single tuple
 def YearData():
-    year = random.randrange(0-41)
+    year = random.randrange(0,41)
     return (historical_stock_returns[year], historical_bond_returns[year], historical_inflation_rates[year])
 
 def retirementCalculator(retirement_account_balance, yearly_expenses, years, stock_percentage):
-    final_balances = np.array([])
+    final_balances = []
+    ran_out = 0
     # Beginning of simulation
     for i in range(10000):
         # Initial Conditions
@@ -63,7 +65,7 @@ def retirementCalculator(retirement_account_balance, yearly_expenses, years, sto
                     
         if (balance_stocks > 0):
             # Money lasted all the way - save the final balance info
-            final_balances.np.append(balance_stocks + balance_bonds)
+            final_balances.append(balance_stocks + balance_bonds)
 
     # Final Data analysis
     percent_successful = (10000 - ran_out)/10000 * 100
@@ -79,28 +81,31 @@ def retirementCalculator(retirement_account_balance, yearly_expenses, years, sto
 # Sends data to React to display user's retirement predictions
 @app.route("/results", methods = ['GET'])
 def results():
-    balance = session.get("retirement_account_balance")
-    expenses = session.get("yearly_expenses")
-    years = session.get("years")
-    stock = session.get("stock_percentage")
     # Issue with trying to pass invalid data into the function as it hasn't been posted yet FIX THIS
-    return  {
+    if session.get('name', None):
+        balance = session.get('retirement_account_balance')
+        expenses = session.get('yearly_expenses')
+        years = session.get('years')
+        stock = session.get('stock_percentage')
+        return retirementCalculator(balance, expenses, years, stock)
+    else:
+        return  {
         "percent_successful": 0,
         "final_balance_average": 0,
         "final_balance_stdev": 0
     }
-    # return retirementCalculator(balance, expenses, years, stock)
+        
 
 # Takes Data from form and assigns them to global variables for computation
 @app.route("/retrieve", methods=['POST'])
 def retrieveData():
     request_data = request.get_json()
     session["name"] = request_data['name']
-    session["retirement_account_balance"] = request_data['retirement_account_balance']
-    session["yearly_expenses"] = request_data['yearly_expenses']
-    session["years"] = request_data['years']
-    session["stock_percentage"] = (request_data['stock_percentage']/100)
-    return request_data   
+    session["retirement_account_balance"] = float(request_data['retirement_account_balance'])
+    session["yearly_expenses"] = float(request_data['yearly_expenses'])
+    session["years"] = float(request_data['years'])
+    session["stock_percentage"] = (float(request_data['stock_percentage'])/100)
+    return redirect(url_for('results')) 
 
 if __name__ == "__main__":
     app.run()
