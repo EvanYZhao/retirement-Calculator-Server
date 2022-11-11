@@ -71,18 +71,21 @@ def retirementCalculator(retirement_account_balance, yearly_expenses, years, sto
     percent_successful = (10000 - ran_out)/10000 * 100
     final_balance_average = statistics.mean(final_balances)
     final_balance_standard_deviation = statistics.stdev(final_balances)
-            
+    
     return {
-        "percent_successful": percent_successful,
-        "final_balance_average": final_balance_average,
-        "final_balance_stdev": final_balance_standard_deviation
+        "retirement_account_balance": session.get('retirement_account_balance'),
+        "yearly_expenses": session.get('yearly_expenses'),
+        "years": session.get('years'),
+        "stock_percentage": session.get('stock_percentage'),
+        "percent_successful": round(percent_successful,2),
+        "final_balance_average": round(final_balance_average,2),
+        "final_balance_stdev": round(final_balance_standard_deviation,2)
     }
 
 # Sends data to React to display user's retirement predictions
 @app.route("/results", methods = ['GET'])
 def results():
-    # Issue with trying to pass invalid data into the function as it hasn't been posted yet FIX THIS
-    if session.get('name', None):
+    if session.get('retirement_account_balance'):
         balance = session.get('retirement_account_balance')
         expenses = session.get('yearly_expenses')
         years = session.get('years')
@@ -100,7 +103,6 @@ def results():
 @app.route("/retrieve", methods=['POST'])
 def retrieveData():
     request_data = request.get_json()
-    session["name"] = request_data['name']
     session["retirement_account_balance"] = float(request_data['retirement_account_balance'])
     session["yearly_expenses"] = float(request_data['yearly_expenses'])
     session["years"] = float(request_data['years'])
