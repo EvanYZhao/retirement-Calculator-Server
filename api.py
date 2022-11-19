@@ -6,6 +6,7 @@ import statistics
 app = Flask(__name__)
 app.secret_key = "super_secret_key"
 
+### PROCESSING ###
 # Loading in stock, bond, and inflation rates in US from years 1980-2021
 historical_stock_returns = np.loadtxt("./data/SnP500_stockReturns.txt", delimiter=',')
 historical_bond_returns = np.loadtxt("./data/BloombergAgg_bondReturns.txt", delimiter=',')
@@ -29,6 +30,20 @@ def YearData():
     return (historical_stock_returns[year], historical_bond_returns[year], historical_inflation_rates[year])
 
 def retirementCalculator(retirement_account_balance, yearly_expenses, years, stock_percentage):
+    # Edge cases where inputs are unreasonable (return 0s for results):
+    # 1. yearly expenses > projected retirement balance
+    # 2. yearly expenses == projected retirement balance but years > 1
+    if (retirement_account_balance < yearly_expenses) or ((retirement_account_balance == yearly_expenses) and years > 1) :
+        return{
+            "retirement_account_balance": session.get('retirement_account_balance'),
+            "yearly_expenses": session.get('yearly_expenses'),
+            "years": session.get('years'),
+            "stock_percentage": session.get('stock_percentage'),
+            "percent_successful": 0,
+            "final_balance_average": 0,
+            "final_balance_stdev": 0
+        }
+        
     final_balances = []
     ran_out = 0
     # Beginning of simulation
@@ -81,7 +96,9 @@ def retirementCalculator(retirement_account_balance, yearly_expenses, years, sto
         "final_balance_average": round(final_balance_average,2),
         "final_balance_stdev": round(final_balance_standard_deviation,2)
     }
-
+    
+    
+### VIEWS ###
 # Sends data to React to display user's retirement predictions
 @app.route("/results", methods = ['GET'])
 def results():
@@ -97,9 +114,8 @@ def results():
         "final_balance_average": 0,
         "final_balance_stdev": 0
     }
-        
 
-# Takes Data from form and assigns them to global variables for computation
+# Takes data from form, stores them into session keys and redirects to /results view to do computation right away
 @app.route("/retrieve", methods=['POST'])
 def retrieveData():
     request_data = request.get_json()
@@ -108,6 +124,12 @@ def retrieveData():
     session["years"] = float(request_data['years'])
     session["stock_percentage"] = (float(request_data['stock_percentage'])/100)
     return redirect(url_for('results')) 
+
+# Clears the session with each page refresh and after every get request made to the /retrieve view
+@app.route("/refresh")
+def refresh():
+    session.clear()
+    return "Refresh complete!"
 
 if __name__ == "__main__":
     app.run()
