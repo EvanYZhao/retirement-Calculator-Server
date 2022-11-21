@@ -97,8 +97,12 @@ def retirementCalculator(retirement_account_balance, yearly_expenses, years, sto
         "final_balance_stdev": round(final_balance_standard_deviation,2)
     }
     
-    
 ### VIEWS ###
+# Homepage that user sees if they navigate to homepage of API
+@app.route("/")
+def homePage():
+    return "Hey, You're not supposed to be here! Go check out the actual website instead!"
+
 # Sends data to React to display user's retirement predictions
 @app.route("/results", methods = ['GET'])
 def results():
