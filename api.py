@@ -3,8 +3,8 @@ import numpy as np
 import random
 import statistics
 
-app = Flask(__name__)
-app.secret_key = "super_secret_key"
+application = Flask(__name__)
+application.secret_key = "super_secret_key"
 
 ### PROCESSING ###
 # Loading in stock, bond, and inflation rates in US from years 1980-2021
@@ -99,12 +99,12 @@ def retirementCalculator(retirement_account_balance, yearly_expenses, years, sto
     
 ### VIEWS ###
 # Homepage that user sees if they navigate to homepage of API
-@app.route("/")
+@application.route("/")
 def homePage():
     return "Hey, You're not supposed to be here! Go check out the actual website instead!"
 
 # Sends data to React to display user's retirement predictions
-@app.route("/results", methods = ['GET'])
+@application.route("/results", methods = ['GET'])
 def results():
     if session.get('retirement_account_balance'):
         balance = session.get('retirement_account_balance')
@@ -120,7 +120,7 @@ def results():
     }
 
 # Takes data from form, stores them into session keys and redirects to /results view to do computation right away
-@app.route("/retrieve", methods=['POST'])
+@application.route("/retrieve", methods=['POST'])
 def retrieveData():
     request_data = request.get_json()
     session["retirement_account_balance"] = float(request_data['retirement_account_balance'])
@@ -130,7 +130,7 @@ def retrieveData():
     return redirect(url_for('results')) 
 
 # Clears the session with each page refresh and after every get request made to the /retrieve view
-@app.route("/refresh")
+@application.route("/refresh")
 def refresh():
     session.clear()
     return "Refresh complete!"
