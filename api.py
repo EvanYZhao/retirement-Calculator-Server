@@ -135,5 +135,5 @@ def refresh():
     session.clear()
     return "Refresh complete!"
 
-if __name__ == "__main__":
-    app.run()
+# if __name__ == "__main__":
+#     app.run()
