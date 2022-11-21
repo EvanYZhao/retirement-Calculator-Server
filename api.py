@@ -3,7 +3,7 @@ import numpy as np
 import random
 import statistics
 
-application = Flask(__name__)
+api = Flask(__name__)
 # application.secret_key = "super_secret_key"
 
 # ### PROCESSING ###
@@ -99,7 +99,7 @@ application = Flask(__name__)
     
 ### VIEWS ###
 # Homepage that user sees if they navigate to homepage of API
-@application.route("/")
+@api.route("/")
 def homePage():
     return "Hey, You're not supposed to be here! Go check out the actual website instead!"
 
