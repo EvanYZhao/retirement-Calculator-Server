@@ -1,10 +1,12 @@
 from flask import Flask, request, redirect, session, url_for
+from flask_cors import CORS
 import numpy as np
 import random
 import statistics
 
 application = Flask(__name__)
 application.secret_key = "super_secret_key"
+cors = CORS(application)
 
 # ### PROCESSING ###
 # # Loading in stock, bond, and inflation rates in US from years 1980-2021
