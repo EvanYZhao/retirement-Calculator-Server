@@ -1,20 +1,20 @@
-from flask import Flask, request, redirect, session, url_for
+from flask import Flask, redirect
 from flask_cors import CORS
 import numpy as np
 import random
 import statistics
 
 application = Flask(__name__)
-application.secret_key = "super_secret_key"
+# Allows Cross-Origin-Resource Sharing
 cors = CORS(application)
 
-# ### PROCESSING ###
-# # Loading in stock, bond, and inflation rates in US from years 1980-2021
+### PROCESSING ###
+# Loading in stock, bond, and inflation rates in US from years 1980-2021
 historical_stock_returns = np.loadtxt("./data/SnP500_stockReturns.txt", delimiter=',')
 historical_bond_returns = np.loadtxt("./data/BloombergAgg_bondReturns.txt", delimiter=',')
 historical_inflation_rates = np.loadtxt("./data/inflationRate.txt", delimiter=',')
 
-# # Functions defined to randomly choose among the 42 rates in each loaded-in txt file
+# Functions defined to randomly choose among the 42 rates in each loaded-in txt file
 def ChangeInBalanceStocks(initial_balance):
     rate = random.choice(historical_stock_returns)
     return initial_balance*rate
@@ -37,10 +37,6 @@ def retirementCalculator(retirement_account_balance, yearly_expenses, years, sto
     # 2. yearly expenses == projected retirement balance but years > 1
     if (retirement_account_balance < yearly_expenses) or ((retirement_account_balance == yearly_expenses) and years > 1) :
         return{
-            "retirement_account_balance": session.get('retirement_account_balance'),
-            "yearly_expenses": session.get('yearly_expenses'),
-            "years": session.get('years'),
-            "stock_percentage": session.get('stock_percentage'),
             "percent_successful": 0,
             "final_balance_average": 0,
             "final_balance_stdev": 0
@@ -89,53 +85,41 @@ def retirementCalculator(retirement_account_balance, yearly_expenses, years, sto
     final_balance_average = statistics.mean(final_balances)
     final_balance_standard_deviation = statistics.stdev(final_balances)
     
+    # Return all user inputs as well as results
     return {
-        "retirement_account_balance": session.get('retirement_account_balance'),
-        "yearly_expenses": session.get('yearly_expenses'),
-        "years": session.get('years'),
-        "stock_percentage": session.get('stock_percentage'),
+        "retirement_account_balance": retirement_account_balance,
+        "yearly_expenses": yearly_expenses,
+        "years": years,
+        "stock_percentage": stock_percentage,
         "percent_successful": round(percent_successful,2),
         "final_balance_average": round(final_balance_average,2),
         "final_balance_stdev": round(final_balance_standard_deviation,2)
     }
     
+    
 ### VIEWS ###
-# Homepage that user sees if they navigate to homepage of API
+# Homepage that user sees if they navigate to homepage of API (redirect)
 @application.route("/")
 def homePage():
-    return "Hey, You're not supposed to be here! Go check out the actual website instead!"
+    return redirect("https://evanyzhao.github.io/retirement-Calculator-Client/")
 
-# Sends data to React to display user's retirement predictions
-@application.route("/results", methods = ['GET'])
-def results():
-    if session.get('retirement_account_balance'):
-        balance = session.get('retirement_account_balance')
-        expenses = session.get('yearly_expenses')
-        years = session.get('years')
-        stock = session.get('stock_percentage')
-        return retirementCalculator(balance, expenses, years, stock)
-    else:
-        return  {
-        "percent_successful": 0,
-        "final_balance_average": 0,
-        "final_balance_stdev": 0
-    }
-
-# Takes data from form, stores them into session keys and redirects to /results view to do computation right away
+# Takes data from form to do computation
 @application.route("/retrieve", methods=['POST'])
 def retrieveData():
+    request_data = None
+    balance = None
+    expenses = None
+    years = None
+    stock = None
     request_data = request.get_json()
-    session["retirement_account_balance"] = float(request_data['retirement_account_balance'])
-    session["yearly_expenses"] = float(request_data['yearly_expenses'])
-    session["years"] = float(request_data['years'])
-    session["stock_percentage"] = (float(request_data['stock_percentage'])/100)
-    return redirect(url_for('results')) 
-
-# Clears the session with each page refresh and after every get request made to the /retrieve view
-@application.route("/refresh")
-def refresh():
-    session.clear()
-    return "Refresh complete!"
+    if request_data == None:
+        return "POST not completed"
+    else:
+        balance = float(request_data['retirement_account_balance'])
+        expenses = float(request_data['yearly_expenses'])
+        years = float(request_data['years'])
+        stock = (float(request_data['stock_percentage'])/100)
+        return retirementCalculator(balance, expenses, years, stock)
 
 if __name__ == "__main__":
     application.run()
