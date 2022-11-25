@@ -1,4 +1,4 @@
-from flask import Flask, redirect
+from flask import Flask, redirect, request
 from flask_cors import CORS
 import numpy as np
 import random
@@ -103,23 +103,26 @@ def retirementCalculator(retirement_account_balance, yearly_expenses, years, sto
 def homePage():
     return redirect("https://evanyzhao.github.io/retirement-Calculator-Client/")
 
-# Takes data from form to do computation
-@application.route("/retrieve", methods=['POST'])
+# Takes data from form to do computation (If user tries to access this page, redirects back to client)
+@application.route("/retrieve", methods=['POST', 'GET'])
 def retrieveData():
-    request_data = None
-    balance = None
-    expenses = None
-    years = None
-    stock = None
-    request_data = request.get_json()
-    if request_data == None:
-        return "POST not completed"
+    if request.method == 'POST':
+        request_data = None
+        balance = None
+        expenses = None
+        years = None
+        stock = None
+        request_data = request.get_json()
+        if request_data == None:
+            return "POST not completed"
+        else:
+            balance = float(request_data['retirement_account_balance'])
+            expenses = float(request_data['yearly_expenses'])
+            years = float(request_data['years'])
+            stock = (float(request_data['stock_percentage'])/100)
+            return retirementCalculator(balance, expenses, years, stock)
     else:
-        balance = float(request_data['retirement_account_balance'])
-        expenses = float(request_data['yearly_expenses'])
-        years = float(request_data['years'])
-        stock = (float(request_data['stock_percentage'])/100)
-        return retirementCalculator(balance, expenses, years, stock)
+        return redirect("https://evanyzhao.github.io/retirement-Calculator-Client/")
 
 if __name__ == "__main__":
     application.run()
